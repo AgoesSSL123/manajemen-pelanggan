@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard Pelanggan</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f2f5;
+    }
+
+    header {
+      background-color: #007bff;
+      color: white;
+      padding: 15px 20px;
+      text-align: center;
+      font-size: 20px;
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-around;
+      background-color: white;
+      border-top: 1px solid #ccc;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      padding: 10px 0;
+      z-index: 100;
+    }
+
+    nav button {
+      background: none;
+      border: none;
+      font-size: 16px;
+      color: #007bff;
+      font-weight: bold;
+    }
+
+    .page {
+      display: none;
+      padding: 20px;
+      padding-bottom: 70px;
+    }
+
+    .active {
+      display: block;
+    }
+
+    form input,
+    form select,
+    form button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    form button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      font-weight: bold;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+    }
+
+    th,
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .actions button {
+      padding: 6px 10px;
+      margin-right: 5px;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-size: 13px;
+    }
+
+    .edit-btn {
+      background-color: #ffc107;
+    }
+
+    .delete-btn {
+      background-color: #dc3545;
+    }
+
+    input#searchInput {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+
+  <header>Dashboard Pelanggan</header>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="page active">
+    <h3>Selamat Datang!</h3>
+    <p>Gunakan menu di bawah untuk mengelola data pelanggan Anda.</p>
+  </div>
+
+  <!-- TAMBAH DATA -->
+  <div id="tambah" class="page">
+    <h3>Tambah / Edit Data Pelanggan</h3>
+    <form id="form">
+      <input type="text" id="nama" placeholder="Nama Pelanggan" required />
+      <input type="text" id="produk" placeholder="Nama Produk" required />
+      <input type="number" id="harga" placeholder="Harga Produk" required />
+      <select id="status" required>
+        <option value="">Pilih Status</option>
+        <option value="Lunas">Lunas</option>
+        <option value="Belum Lunas">Belum Lunas</option>
+      </select>
+      <input type="date" id="tanggal" required />
+      <input type="hidden" id="editIndex" />
+      <button type="submit">Simpan Data</button>
+    </form>
+  </div>
+
+  <!-- RIWAYAT DATA -->
+  <div id="riwayat" class="page">
+    <h3>Riwayat Data Pelanggan</h3>
+
+    <!-- 🔍 Kotak Pencarian -->
+    <input
+      type="text"
+      id="searchInput"
+      placeholder="Cari nama, produk, atau status..."
+      oninput="renderTable()"
+    />
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Nama</th>
+            <th>Produk</th>
+            <th>Harga</th>
+            <th>Status</th>
+            <th>Tanggal</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tabel-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- NAVIGASI -->
+  <nav>
+    <button onclick="showPage('dashboard')">Dashboard</button>
+    <button onclick="showPage('tambah')">Tambah data pelanggan</button>
+    <button onclick="showPage('riwayat')">Riwayat</button>
+  </nav>
+
+  <script>
+    const STORAGE_KEY = 'dataPelanggan';
+    let dataPelanggan = [];
+
+    const pages = document.querySelectorAll('.page');
+    const form = document.getElementById('form');
+    const tabelBody = document.getElementById('tabel-body');
+
+    function showPage(id) {
+      pages.forEach(page => page.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function loadData() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        dataPelanggan = JSON.parse(stored);
+        renderTable();
+      }
+    }
+
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataPelanggan));
+    }
+
+    function renderTable() {
+      const searchValue = document.getElementById('searchInput').value.toLowerCase();
+      tabelBody.innerHTML = '';
+
+      dataPelanggan.forEach((item, index) => {
+        const match =
+          item.nama.toLowerCase().includes(searchValue) ||
+          item.produk.toLowerCase().includes(searchValue) ||
+          item.status.toLowerCase().includes(searchValue);
+
+        if (match) {
+          const row = `
+            <tr>
+              <td>${item.nama}</td>
+              <td>${item.produk}</td>
+              <td>${item.harga}</td>
+              <td>${item.status}</td>
+              <td>${item.tanggal}</td>
+              <td class="actions">
+                <button class="edit-btn" onclick="editData(${index})">Edit</button>
+                <button class="delete-btn" onclick="deleteData(${index})">Hapus</button>
+              </td>
+            </tr>
+          `;
+          tabelBody.innerHTML += row;
+        }
+      });
+    }
+
+    function editData(index) {
+      const data = dataPelanggan[index];
+      document.getElementById('nama').value = data.nama;
+      document.getElementById('produk').value = data.produk;
+      document.getElementById('harga').value = data.harga;
+      document.getElementById('status').value = data.status;
+      document.getElementById('tanggal').value = data.tanggal;
+      document.getElementById('editIndex').value = index;
+      showPage('tambah');
+    }
+
+    function deleteData(index) {
+      if (confirm('Yakin ingin menghapus data ini?')) {
+        dataPelanggan.splice(index, 1);
+        saveData();
+        renderTable();
+      }
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const nama = document.getElementById('nama').value;
+      const produk = document.getElementById('produk').value;
+      const harga = document.getElementById('harga').value;
+      const status = document.getElementById('status').value;
+      const tanggal = document.getElementById('tanggal').value;
+      const editIndex = document.getElementById('editIndex').value;
+
+      const pelanggan = { nama, produk, harga, status, tanggal };
+
+      if (editIndex === '') {
+        dataPelanggan.push(pelanggan);
+      } else {
+        dataPelanggan[editIndex] = pelanggan;
+        document.getElementById('editIndex').value = '';
+      }
+
+      saveData();
+      form.reset();
+      renderTable();
+      showPage('riwayat');
+    });
+
+    // Load data saat halaman dibuka
+    window.onload = () => {
+      loadData();
+    };
+  </script>
+
+</body>
+</html>
